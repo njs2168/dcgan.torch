@@ -18,13 +18,16 @@ for k,v in pairs(opt) do opt[k] = tonumber(os.getenv(k)) or os.getenv(k) or opt[
 print(opt)
 if opt.display == 0 then opt.display = false end
 
+-- check to make sure net was loaded
 assert(net ~= '', 'provide a generator model')
 
+-- check whether to use gpu or cpu
 if opt.gpu > 0 then
     require 'cunn'
     require 'cudnn'
 end
 
+-- generate random noise and load net
 noise = torch.Tensor(opt.batchSize, opt.nz, opt.imsize, opt.imsize)
 net = torch.load(opt.net)
 
@@ -42,6 +45,7 @@ elseif opt.noisetype == 'normal' then
     noise:normal(0, 1)
 end
 
+-- create noise tensor
 noiseL = torch.FloatTensor(opt.nz):uniform(-1, 1)
 noiseR = torch.FloatTensor(opt.nz):uniform(-1, 1)
 if opt.noisemode == 'line' then
@@ -88,11 +92,13 @@ local images = net:forward(noise)
 print('Images size: ', images:size(1)..' x '..images:size(2) ..' x '..images:size(3)..' x '..images:size(4))
 images:add(1):mul(0.5)
 print('Min, Max, Mean, Stdv', images:min(), images:max(), images:mean(), images:std())
-image.save(opt.name .. '.png', image.toDisplayTensor(images))
-print('Saved image to: ', opt.name .. '.png')
+image.save(opt.name .. '.jpg', image.toDisplayTensor(images))
+print('Saved image to: ', opt.name .. '.jpg')
 
-if opt.display then
-    disp = require 'display'
-    disp.image(images)
-    print('Displayed image')
-end
+
+-- COMMENTED THE BELOW OUT AS DISPLAY IS FUCKING HORRIBLE
+--if opt.display then
+--    disp = require 'display'
+--    disp.image(images)
+--    print('Displayed image')
+--end
